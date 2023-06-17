@@ -4,6 +4,7 @@ mode="$1"
 file="$2"
 
 if [ ! -e "$file" ]; then
+    echo "Nonexistant file $file" 1>&2
     exit 1
 fi
 
@@ -18,8 +19,11 @@ if [ "$mode" = "get" ]; then
 else
     if [ "$mode" = "increase" ]; then
         delta="+ 1"
-    else
+    elif [ "$mode" = "decrease" ]; then
         delta="- 1"
+    else
+        echo "Unrecognized mode $mode" 1>&2
+        exit 2
     fi
 
     new_rating=$(echo "$current_rating" | awk '{print $1'"$delta"';}')
