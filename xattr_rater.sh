@@ -7,10 +7,10 @@ if [ ! -e "$file" ]; then
     exit 1
 fi
 
-if [ -z "$(getfattr --match 'rating' "$file")" ]; then
+if [ -z "$(getfattr --absolute-names --match 'rating' "$file")" ]; then
     current_rating="0"
 else
-    current_rating=$(getfattr --name 'user.rating' --only-values "$file")
+    current_rating=$(getfattr --absolute-names --name 'user.rating' --only-values "$file")
 fi
 
 if [ "$mode" = "get" ]; then
