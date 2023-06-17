@@ -13,13 +13,11 @@ fi
 dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 while read -r file; do
-    rating=$("$dir"/xattr_rater.sh get "$file")
+    rating=$("$dir"/xattr_rater.sh get "$file" 2>&1)
     err="$?"
     if [ "$err" -gt 0 ]; then
-        echo "Error $err rating for $file" 1>&2
-    fi
-
-    if awk "BEGIN {if ($rating $cond) exit 0; else exit 1;}"; then
+        echo "Error $err getting rating for $file: $rating" 1>&2
+    elif awk "BEGIN {if ($rating $cond) exit 0; else exit 1;}"; then
         echo "$file"
     fi
 done
