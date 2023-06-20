@@ -82,7 +82,7 @@ pub fn main() !void {
         };
 
         if (print) {
-            try stdout.print("Rating for {s}: {d}\n", .{ line, maybe_rating });
+            try stdout.print("{s}\n", .{line});
         }
     }
 }
