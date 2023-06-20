@@ -12,7 +12,6 @@ fn get_rating(path: [:0]const u8) GetRatingError!i32 {
     var attr_buf = [_]u8{0} ** 100;
     var size: c_int = attr_buf.len;
     const rc = xattr.attr_get(path.ptr, "rating", &attr_buf, &size, 0);
-    //std.io.getStdOut().writer().print("xattr_get for {s}: rc: {d}, length: {d}, errno: {d}, value: {s}//\n", .{ path, rc, size, std.c._errno().*, attr_buf }) catch unreachable;
     if (rc == 0) {
         return std.fmt.parseInt(i32, attr_buf[0..std.math.absCast(size)], 10) catch return GetRatingError.ParseInt;
     } else {
