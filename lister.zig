@@ -28,11 +28,33 @@ fn get_rating(path: [*c]const u8) GetRatingError!i32 {
     }
 }
 
+const Comp = enum { Greater, Lesser };
+
 pub fn main() !void {
     // TODO: handle errors writing to stdout/stderr more gracefully
     const stdout = std.io.getStdOut().writer();
     const stderr = std.io.getStdErr().writer();
     const stdin = std.io.getStdIn().reader();
+
+    // Fetch args
+    if (std.os.argv.len != 3) {
+        try stderr.print("Expected -g I or -l I\n", .{});
+        std.os.exit(1);
+    }
+    const flag = std.mem.sliceTo(std.os.argv[1], 0);
+    const flag_arg = std.mem.sliceTo(std.os.argv[2], 0);
+
+    // Interpret args
+    var comp: Comp = undefined;
+    if (std.mem.eql(u8, flag, "-g")) {
+        comp = Comp.Greater;
+    } else {
+        comp = Comp.Lesser;
+    }
+    const fixed = std.fmt.parseInt(i32, flag_arg, 10) catch {
+        try stderr.print("Could not parse {s} into integer\n", .{flag_arg});
+        std.os.exit(1);
+    };
 
     // TODO: switch to this when newer stdlib is available
     //const buffer = std.io.FixedBufferStream(@TypeOf(underlying)){ .buffer = underlying, .pos = 0 };
@@ -54,6 +76,13 @@ pub fn main() !void {
             continue; // Once we have printed the error, nothing else to do with this file
         };
 
-        try stdout.print("Rating for {s}: {d}\n", .{ line, maybe_rating });
+        const print = switch (comp) {
+            .Greater => maybe_rating > fixed,
+            .Lesser => maybe_rating < fixed,
+        };
+
+        if (print) {
+            try stdout.print("Rating for {s}: {d}\n", .{ line, maybe_rating });
+        }
     }
 }
