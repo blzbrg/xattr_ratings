@@ -62,10 +62,12 @@ pub fn main() !void {
 
     var buffer: [1000]u8 = undefined;
 
-    // TODO: panic on errors such as StreamTooLong (line does not fit in the buffer)
+    while (stdin.readUntilDelimiterOrEof(&buffer, '\n')) |maybe_line| {
+        if (maybe_line == null) {
+            break; // EOF
+        }
+        const line = maybe_line.?;
 
-    // Stop on EOF
-    while (try stdin.readUntilDelimiterOrEof(&buffer, '\n')) |line| {
         buffer[line.len] = 0; // Change the newline character to a NUL
         const maybe_rating = get_rating(&buffer) catch |e| {
             switch (e) {
@@ -84,5 +86,7 @@ pub fn main() !void {
         if (print) {
             try stdout.print("{s}\n", .{line});
         }
+    } else |err| {
+        try stderr.print("Error {!} reading from stdin", .{err});
     }
 }
