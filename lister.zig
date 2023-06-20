@@ -8,15 +8,14 @@ const DEFAULT_RATING = 0;
 
 const GetRatingError = error{ ParseInt, NonexistantFile, OtherXattr };
 
-fn get_rating(path: [*c]const u8) GetRatingError!i32 {
+fn get_rating(path: [:0]const u8) GetRatingError!i32 {
     var attr_buf = [_]u8{0} ** 100;
     var size: c_int = attr_buf.len;
-    const rc = xattr.attr_get(path, "rating", &attr_buf, &size, 0);
+    const rc = xattr.attr_get(path.ptr, "rating", &attr_buf, &size, 0);
     //std.io.getStdOut().writer().print("xattr_get for {s}: rc: {d}, length: {d}, errno: {d}, value: {s}//\n", .{ path, rc, size, std.c._errno().*, attr_buf }) catch unreachable;
     if (rc == 0) {
         return std.fmt.parseInt(i32, attr_buf[0..std.math.absCast(size)], 10) catch return GetRatingError.ParseInt;
     } else {
-        // Error
         const e = std.os.errno(rc);
         if (e == std.os.linux.E.NODATA) {
             return DEFAULT_RATING; // Attribute does not exist on this file
@@ -68,8 +67,11 @@ pub fn main() !void {
         }
         const line = maybe_line.?;
 
+        // sentinel slice, only documentation seems to be https://github.com/ziglang/zig/issues/3770
         buffer[line.len] = 0; // Change the newline character to a NUL
-        const maybe_rating = get_rating(&buffer) catch |e| {
+        const sentinel_path: [:0]const u8 = buffer[0..line.len :0];
+
+        const maybe_rating = get_rating(sentinel_path) catch |e| {
             switch (e) {
                 GetRatingError.ParseInt => try stderr.print("Unparseable rating for {s}\n", .{line}),
                 GetRatingError.NonexistantFile => try stderr.print("File {s} does not really exist\n", .{line}),
